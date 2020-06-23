@@ -1,3 +1,5 @@
+Forked from [@mileperhour](https://github.com/mileperhour/localtuya-homeassistant)
+
 
 # localtuya-homeassistant
 
@@ -31,6 +33,7 @@ Local handling for Tuya Devices under Home-Assistant and Hassio, getting paramet
            host: 192.168.1.251
            local_key: 1234567890abcdef
            device_id: abcdef1234567890abcdef
+           update_interval: 20 
            switches:
              switch1:
              friendly_name: TUYA_LED
