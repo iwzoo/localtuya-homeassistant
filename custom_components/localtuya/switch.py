@@ -77,7 +77,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     config.get(CONF_ID)
                 )
         )
-
+    else:
+        switches.append(
+                TuyaDevice(
+                    outlet_device,
+                    config.get(CONF_DEVICE_ID),
+                    config.get(CONF_ICON),
+                    config.get(CONF_ID)
+                )
+        )
     add_devices(switches)
 
 class TuyaCache:
