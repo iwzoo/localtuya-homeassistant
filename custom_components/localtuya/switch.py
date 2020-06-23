@@ -10,13 +10,15 @@ from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_ID, CONF_SWITCHES, C
 import homeassistant.helpers.config_validation as cv
 from time import time
 from threading import Lock
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pytuya==7.0.4']
 
-CONF_DEVICE_ID = 'device_id'
-CONF_LOCAL_KEY = 'local_key'
+from .const import CONF_DEVICE_ID, CONF_LOCAL_KEY, CONF_UPDATE_INTERVAL
 
-DEFAULT_ID = '1'
+from .const import DEFAULT_ID
 
 ATTR_CURRENT = 'current'
 ATTR_CURRENT_CONSUMPTION = 'current_consumption'
@@ -30,6 +32,7 @@ SWITCH_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_UPDATE_INTERVAL, default=20): cv.positive_int,
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_DEVICE_ID): cv.string,
     vol.Required(CONF_LOCAL_KEY): cv.string,
@@ -41,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up of the Tuya switch."""
-    import pytuya
+    from . import pytuya
 
     devices = config.get(CONF_SWITCHES)
     switches = []
@@ -51,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             config.get(CONF_DEVICE_ID),
             config.get(CONF_HOST),
             config.get(CONF_LOCAL_KEY)
-        )
+        ), config.get(CONF_UPDATE_INTERVAL)
     )
 
     for object_id, device_config in devices.items():
@@ -80,12 +83,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class TuyaCache:
     """Cache wrapper for pytuya.OutletDevice"""
 
-    def __init__(self, device):
+    def __init__(self, device, scan_interval=20):
         """Initialize the cache."""
         self._cached_status = ''
         self._cached_status_time = 0
         self._device = device
         self._lock = Lock()
+        self._scan_interval = scan_interval
+        _LOGGER.debug("fetch device status every %d seconds", scan_interval)
 
     def __get_status(self):
         for i in range(3):
@@ -107,7 +112,7 @@ class TuyaCache:
         self._lock.acquire()
         try:
             now = time()
-            if not self._cached_status or now - self._cached_status_time > 20:
+            if not self._cached_status or now - self._cached_status_time > self._scan_interval:
                 self._cached_status = self.__get_status()
                 self._cached_status_time = time()
             return self._cached_status
