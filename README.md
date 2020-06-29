@@ -1,3 +1,8 @@
+_Recommend using the new repository **[TuyaLocal](https://github.com/iwzoo/tuyalocal_homeassistant)** which is compatible latest home assistant and supports HACS_
+
+
+
+
 Forked from [@mileperhour](https://github.com/mileperhour/localtuya-homeassistant)
 
 
